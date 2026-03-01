@@ -88,6 +88,19 @@ Owner  (You — the CLI user)
 | **Department Head** | Receives dept task, breaks into employee sub-tasks, reviews outputs, reports to CEO |
 | **Employee** | Executes assigned sub-task via Pi/Ollama, returns output to department head |
 
+### Employee Workspace & File Access
+
+Each employee has a **designated workspace folder** that serves as their sole working directory. All of their task inputs and outputs are confined to this space.
+
+- **Designated folder:** When an employee is hired, the system assigns them a workspace path (e.g. under a company workspace root). This path is stored in state and used as the working directory for every task they run.
+- **Sandbox boundary:** An employee cannot read from or write to paths outside their workspace. The execution engine runs their tasks with the workspace as the current working directory and enforces that file access stays within that tree (e.g. via working directory and, where applicable, path validation or sandboxing).
+- **Folder structure:** Within their workspace, employees are expected to organize work in a consistent structure so that task inputs and outputs are easy to find and audit. The standard layout is:
+  - **`input/`** — Task briefs, prompts, and any inputs provided for the employee’s work.
+  - **`output/`** — Artifacts, reports, and other outputs produced by the employee.
+  - Optionally **`plans/<plan-id>/input/`** and **`plans/<plan-id>/output/`** for plan-scoped tasks, so work is grouped by plan.
+
+The execution engine creates this structure when the workspace is first provisioned and passes the paths to the agent (e.g. in the task context or system prompt) so the agent knows where to read inputs from and where to write outputs.
+
 ---
 
 ## 4. Core Components
@@ -161,7 +174,8 @@ list_departments() -> list[dict]
 set_department_head(dept_name: str, employee_name: str) -> None
 
 # Employee management
-hire_employee(name: str, role: str, model: str, department: str) -> None
+hire_employee(name: str, role: str, model: str, department: str, workspace_path: str = None) -> None
+  # If workspace_path omitted, auto-assigns under company workspace root (e.g. <workspace_root>/<name>/)
 fire_employee(name: str) -> None
 get_employee(name: str) -> dict
 list_employees(department: str = None) -> list[dict]
@@ -192,6 +206,7 @@ set_ceo_report(plan_id: str, report: str) -> None
 - **Department head eligibility:** Only an existing employee within the department can be set as head
 - **Ollama model check (pre-hire):** Pings `http://localhost:11434/api/tags` before saving; fails gracefully if model not found
 - **Plan status gating:** `execute-plan` rejects plans not in `approved` status
+- **Workspace provisioning:** On hire, the employee’s workspace directory is created (if it does not exist) with the standard `input/` and `output/` subfolders; `workspace_path` is stored in the employee record. If no path is supplied, it is derived from the company workspace root (e.g. `./workspaces` by default, or configurable via `COMPANY_OS_WORKSPACES` env var), as `<workspace_root>/<employee_name>/`
 
 ---
 
@@ -413,7 +428,7 @@ Write a final update report for the Owner covering:
 
 **Mechanism:** Python `subprocess` module
 
-**Responsibility:** Assembles the Pi invocation command from employee or CEO configuration, spawns the subprocess, and captures output.
+**Responsibility:** Assembles the Pi invocation command from employee or CEO configuration, spawns the subprocess, and captures output. For employees, execution is scoped to the employee’s designated workspace so that file access stays within that folder.
 
 #### Core Functions
 
@@ -426,13 +441,19 @@ execute_ceo_task(prompt: str) -> str   # Uses CEO config instead of employee con
 
 ```
 1. Load agent config from state.py (employee or CEO)
-2. Construct Pi command:
+2. For employees: resolve workspace_path from employee config; use as cwd for subprocess (enforces sandbox — no access outside this tree)
+3. Optionally inject into task context: paths to input/ and output/ (and plan-scoped subdirs if applicable) within workspace
+4. Construct Pi command:
    pi --model <model> --system "<role_prompt>" "<task_prompt>"
-3. Spawn subprocess (subprocess.run)
-4. Stream/capture stdout
-5. Increment tasks_completed in state
-6. Return output string to caller
+5. Spawn subprocess (subprocess.run) with cwd=employee workspace when executing employee tasks
+6. Stream/capture stdout
+7. Increment tasks_completed in state
+8. Return output string to caller
 ```
+
+#### Employee workspace sandbox
+- The execution engine runs each employee’s Pi process with **working directory** set to that employee’s `workspace_path`. The agent should treat this as the root of its file system for the task; any file reads or writes are expected to stay under this path.
+- Task inputs and outputs are organized in the workspace’s `input/` and `output/` (and optionally `plans/<plan-id>/input/`, `plans/<plan-id>/output/`) so that work is auditable and consistent across employees.
 
 #### Error Handling
 - **Pi not found:** Raise a clear error if the `pi` binary is not in PATH
@@ -510,6 +531,7 @@ company-os collaborate alice bob "Write and audit a web scraper"
       "role": "Engineering Lead. You manage engineering projects, break down technical tasks, and review your team's work.",
       "model": "llama3:8b",
       "department": "engineering",
+      "workspace_path": "workspaces/alice",
       "is_department_head": true,
       "tasks_completed": 12,
       "hired_at": "2026-02-27T10:05:00Z"
@@ -518,6 +540,7 @@ company-os collaborate alice bob "Write and audit a web scraper"
       "role": "Backend Developer. You write clean Python APIs and focus on reliability and performance.",
       "model": "mistral:instruct",
       "department": "engineering",
+      "workspace_path": "workspaces/bob",
       "is_department_head": false,
       "tasks_completed": 5,
       "hired_at": "2026-02-27T11:00:00Z"
@@ -526,6 +549,7 @@ company-os collaborate alice bob "Write and audit a web scraper"
       "role": "Marketing Director. You create go-to-market strategies and coordinate content campaigns.",
       "model": "llama3:8b",
       "department": "marketing",
+      "workspace_path": "workspaces/dave",
       "is_department_head": true,
       "tasks_completed": 7,
       "hired_at": "2026-02-27T10:06:00Z"
@@ -587,6 +611,7 @@ company-os collaborate alice bob "Write and audit a web scraper"
 - `revisions` is an append-only array; the latest entry reflects the current content
 - Employee keys and department keys are lowercase strings (enforced by state layer)
 - `is_department_head` is set automatically by `set-dept-head` command
+- `workspace_path` is set when the employee is hired (explicit path or auto under company workspace root). The directory is created with `input/` and `output/` subfolders; employees must keep all task inputs and outputs within this tree
 
 ---
 
@@ -672,6 +697,8 @@ company-os/
 ├── plan_manager.py      # Plan lifecycle: draft → approval → revision loop
 ├── hierarchy.py         # Org breakdown: CEO → dept head → employee execution
 ├── company.json         # Runtime state file (gitignored)
+├── workspaces/          # Company workspace root (gitignored); one subdir per employee (e.g. alice/, bob/)
+│   └── <employee>/       # input/, output/, optionally plans/<plan-id>/input|output
 ├── pyproject.toml       # Package metadata + dependencies
 ├── requirements.txt     # Pinned dependencies
 └── README.md            # Setup and usage guide
@@ -702,9 +729,11 @@ company-os/
 | Concurrency (v1.0) | Synchronous — departments and employees execute sequentially |
 | Concurrency (v2.0) | `asyncio` + `asyncio.subprocess` for parallel department execution |
 | State location | `./company.json` by default; configurable via `COMPANY_OS_STATE` env var |
+| Workspace root | `./workspaces` by default; configurable via `COMPANY_OS_WORKSPACES` env var; one subfolder per employee |
 | Task timeout | 120s default; configurable via `COMPANY_OS_TIMEOUT` env var |
 | Security | System prompts sanitized before subprocess injection; `subprocess` list form prevents shell injection |
 | Plan gating | `execute-plan` validates plan is in `approved` status before proceeding |
+| Employee workspace | Each employee has a designated folder (`workspace_path`); execution uses it as cwd so the agent cannot access paths outside it. Inputs/outputs live under `input/` and `output/` (and optionally plan-scoped subdirs) within that folder |
 
 ---
 
