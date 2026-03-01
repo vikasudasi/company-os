@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "company-os"
+version = "0.1.0"
+description = "Company-OS: Your autonomous AI-powered company simulator."
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "black>=23.0", "mypy>=1.0"]
+
+[tool.setuptools]
+py-modules = ["main", "state", "agent_runner", "plan_manager", "hierarchy"]
+
+[project.scripts]
+company-os = "main:app"

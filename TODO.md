@@ -6,16 +6,16 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 
 ## 0. Project scaffolding
 
-- [ ] **0.1** Create project directory and `git init`
-- [ ] **0.2** Set up Python 3.11+ venv (e.g. `python3 -m venv .venv`)
-- [ ] **0.3** Create `pyproject.toml` with:
-  - [ ] Build system: setuptools
-  - [ ] Project name `company-os`, version, `requires-python = ">=3.11"`
-  - [ ] Dependencies: `typer>=0.12`, `rich>=13.0`, `requests>=2.31`
-  - [ ] Entry point: `company-os = "main:app"`
-- [ ] **0.4** Create empty modules: `main.py`, `state.py`, `agent_runner.py`, `plan_manager.py`, `hierarchy.py`
-- [ ] **0.5** Add `.gitignore`: `.venv/`, `__pycache__/`, `*.pyc`, `company.json`, `workspaces/`
-- [ ] **0.6** Run `pip install -e .` and verify `company-os --help` runs (empty command list)
+- [x] **0.1** Create project directory and `git init`
+- [x] **0.2** Set up Python 3.11+ venv (e.g. `python3 -m venv .venv`)
+- [x] **0.3** Create `pyproject.toml` with:
+  - [x] Build system: setuptools
+  - [x] Project name `company-os`, version, `requires-python = ">=3.11"`
+  - [x] Dependencies: `typer>=0.12`, `rich>=13.0`, `requests>=2.31`
+  - [x] Entry point: `company-os = "main:app"`
+- [x] **0.4** Create empty modules: `main.py`, `state.py`, `agent_runner.py`, `plan_manager.py`, `hierarchy.py`
+- [x] **0.5** Add `.gitignore`: `.venv/`, `__pycache__/`, `*.pyc`, `company.json`, `workspaces/`
+- [x] **0.6** Run `pip install -e .` and verify `company-os --help` runs (empty command list)
 
 ---
 
@@ -23,100 +23,100 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 
 ### 1.1 Company lifecycle
 
-- [ ] **1.1.1** `init_company(name: str) -> None`
-  - [ ] Creates `company.json` with `company_name`, `created_at` (ISO 8601), `ceo: null`, `departments: {}`, `employees: {}`, `plans: {}`
-  - [ ] Raises error if `company.json` already exists (company already initialized)
-- [ ] **1.1.2** `load_state() -> dict`
-  - [ ] Reads state from path: `COMPANY_OS_STATE` env var or default `./company.json`
-  - [ ] Returns parsed JSON dict
-  - [ ] Raises `FileNotFoundError` with message suggesting `company-os init`
-- [ ] **1.1.3** `save_state(state: dict) -> None`
-  - [ ] Writes atomically (temp file + `os.replace`) to state path
-  - [ ] Uses same path as `load_state` (env or default)
+- [x] **1.1.1** `init_company(name: str) -> None`
+  - [x] Creates `company.json` with `company_name`, `created_at` (ISO 8601), `ceo: null`, `departments: {}`, `employees: {}`, `plans: {}`
+  - [x] Raises error if `company.json` already exists (company already initialized)
+- [x] **1.1.2** `load_state() -> dict`
+  - [x] Reads state from path: `COMPANY_OS_STATE` env var or default `./company.json`
+  - [x] Returns parsed JSON dict
+  - [x] Raises `FileNotFoundError` with message suggesting `company-os init`
+- [x] **1.1.3** `save_state(state: dict) -> None`
+  - [x] Writes atomically (temp file + `os.replace`) to state path
+  - [x] Uses same path as `load_state` (env or default)
 
 ### 1.2 CEO management
 
-- [ ] **1.2.1** `hire_ceo(name: str, model: str) -> None`
-  - [ ] Validates no CEO exists yet (raise if already hired)
-  - [ ] Calls `_check_ollama_model(model)` before saving
-  - [ ] Builds CEO system prompt from company name
-  - [ ] Saves CEO with `name`, `model`, `system_prompt`, `tasks_completed: 0`, `hired_at` (ISO 8601)
-- [ ] **1.2.2** `get_ceo() -> dict`
-  - [ ] Returns CEO dict; raises `ValueError` if no CEO hired
+- [x] **1.2.1** `hire_ceo(name: str, model: str) -> None`
+  - [x] Validates no CEO exists yet (raise if already hired)
+  - [x] Calls `_check_ollama_model(model)` before saving
+  - [x] Builds CEO system prompt from company name
+  - [x] Saves CEO with `name`, `model`, `system_prompt`, `tasks_completed: 0`, `hired_at` (ISO 8601)
+- [x] **1.2.2** `get_ceo() -> dict`
+  - [x] Returns CEO dict; raises `ValueError` if no CEO hired
 
 ### 1.3 Department management
 
-- [ ] **1.3.1** `create_department(name: str) -> None`
-  - [ ] Normalizes name (e.g. lowercase) for key
-  - [ ] Adds to `departments` with `head: null`, `created_at`
-  - [ ] Raises if department name already exists
-- [ ] **1.3.2** `list_departments() -> list[dict]`
-  - [ ] Returns list of department dicts (e.g. name, head, created_at, employee names)
-- [ ] **1.3.3** `set_department_head(dept_name: str, employee_name: str) -> None`
-  - [ ] Validates department exists
-  - [ ] Validates employee exists and belongs to that department
-  - [ ] Sets `departments[dept]["head"] = employee_name`
-  - [ ] Sets `employees[employee_name]["is_department_head"] = true`
-  - [ ] Clears previous head’s `is_department_head` if reassigning
+- [x] **1.3.1** `create_department(name: str) -> None`
+  - [x] Normalizes name (e.g. lowercase) for key
+  - [x] Adds to `departments` with `head: null`, `created_at`
+  - [x] Raises if department name already exists
+- [x] **1.3.2** `list_departments() -> list[dict]`
+  - [x] Returns list of department dicts (e.g. name, head, created_at, employee names)
+- [x] **1.3.3** `set_department_head(dept_name: str, employee_name: str) -> None`
+  - [x] Validates department exists
+  - [x] Validates employee exists and belongs to that department
+  - [x] Sets `departments[dept]["head"] = employee_name`
+  - [x] Sets `employees[employee_name]["is_department_head"] = true`
+  - [x] Clears previous head's `is_department_head` if reassigning
 
 ### 1.4 Employee management
 
-- [ ] **1.4.1** Resolve company workspace root: default `./workspaces` or `COMPANY_OS_WORKSPACES` env var
-- [ ] **1.4.2** `hire_employee(name: str, role: str, model: str, department: str, workspace_path: str = None) -> None`
-  - [ ] Validates employee name not already in `employees`
-  - [ ] Validates department exists
-  - [ ] Calls `_check_ollama_model(model)`
-  - [ ] If `workspace_path` omitted: set to `<workspace_root>/<name>/` (normalized)
-  - [ ] Provisions workspace: create directory and `input/`, `output/` subdirs (and optionally `plans/` placeholder)
-  - [ ] Saves employee: `role`, `model`, `department`, `workspace_path`, `is_department_head: false`, `tasks_completed: 0`, `hired_at`
-- [ ] **1.4.3** `fire_employee(name: str) -> None`
-  - [ ] Removes employee from `employees`
-  - [ ] If they were a department head, clears `departments[dept]["head"]` for that dept
-- [ ] **1.4.4** `get_employee(name: str) -> dict`
-  - [ ] Returns employee dict; raises `KeyError` if not found
-- [ ] **1.4.5** `list_employees(department: str = None) -> list[dict]`
-  - [ ] Returns all employees or filtered by department
-- [ ] **1.4.6** `increment_task_count(name: str) -> None`
-  - [ ] Loads state, increments `employees[name]["tasks_completed"]`, saves
+- [x] **1.4.1** Resolve company workspace root: default `./workspaces` or `COMPANY_OS_WORKSPACES` env var
+- [x] **1.4.2** `hire_employee(name: str, role: str, model: str, department: str, workspace_path: str = None) -> None`
+  - [x] Validates employee name not already in `employees`
+  - [x] Validates department exists
+  - [x] Calls `_check_ollama_model(model)`
+  - [x] If `workspace_path` omitted: set to `<workspace_root>/<name>/` (normalized)
+  - [x] Provisions workspace: create directory and `input/`, `output/` subdirs (and optionally `plans/` placeholder)
+  - [x] Saves employee: `role`, `model`, `department`, `workspace_path`, `is_department_head: false`, `tasks_completed: 0`, `hired_at`
+- [x] **1.4.3** `fire_employee(name: str) -> None`
+  - [x] Removes employee from `employees`
+  - [x] If they were a department head, clears `departments[dept]["head"]` for that dept
+- [x] **1.4.4** `get_employee(name: str) -> dict`
+  - [x] Returns employee dict; raises `KeyError` if not found
+- [x] **1.4.5** `list_employees(department: str = None) -> list[dict]`
+  - [x] Returns all employees or filtered by department
+- [x] **1.4.6** `increment_task_count(name: str) -> None`
+  - [x] Loads state, increments `employees[name]["tasks_completed"]`, saves
 
 ### 1.5 Ollama model check
 
-- [ ] **1.5.1** `_check_ollama_model(model: str) -> None`
-  - [ ] GET `http://localhost:11434/api/tags`
-  - [ ] Parses JSON for `models[].name` (or equivalent)
-  - [ ] Raises `ValueError` with message like `"Model 'X' not found. Run: ollama pull X"` if not found
-  - [ ] Handles `requests.ConnectionError` when Ollama not running (clear error message)
+- [x] **1.5.1** `_check_ollama_model(model: str) -> None`
+  - [x] GET `http://localhost:11434/api/tags`
+  - [x] Parses JSON for `models[].name` (or equivalent)
+  - [x] Raises `ValueError` with message like `"Model 'X' not found. Run: ollama pull X"` if not found
+  - [x] Handles `requests.ConnectionError` when Ollama not running (clear error message)
 
 ### 1.6 Plan state (CRUD)
 
-- [ ] **1.6.1** `create_plan(goal: str, content: str) -> str`
-  - [ ] Generates `plan_id` as `plan-NNN` (zero-padded, incrementing)
-  - [ ] Saves plan with `goal`, `content`, `created_at`, `status: "draft"`, `revisions: []`, `department_tasks: {}`
-  - [ ] Returns `plan_id`
-- [ ] **1.6.2** `get_plan(plan_id: str) -> dict`
-  - [ ] Returns plan dict; raises `KeyError` if not found
-- [ ] **1.6.3** `list_plans() -> list[dict]`
-  - [ ] Returns list of plan summaries (e.g. plan_id, goal, status, created_at)
-- [ ] **1.6.4** `update_plan_status(plan_id: str, status: str) -> None`
-- [ ] **1.6.5** `update_plan_content(plan_id: str, content: str) -> None`
-- [ ] **1.6.6** `add_plan_revision(plan_id: str, feedback: str, revised_content: str) -> None`
-  - [ ] Appends to `revisions` with `feedback`, `revised_at`, `content`
+- [x] **1.6.1** `create_plan(goal: str, content: str) -> str`
+  - [x] Generates `plan_id` as `plan-NNN` (zero-padded, incrementing)
+  - [x] Saves plan with `goal`, `content`, `created_at`, `status: "draft"`, `revisions: []`, `department_tasks: {}`
+  - [x] Returns `plan_id`
+- [x] **1.6.2** `get_plan(plan_id: str) -> dict`
+  - [x] Returns plan dict; raises `KeyError` if not found
+- [x] **1.6.3** `list_plans() -> list[dict]`
+  - [x] Returns list of plan summaries (e.g. plan_id, goal, status, created_at)
+- [x] **1.6.4** `update_plan_status(plan_id: str, status: str) -> None`
+- [x] **1.6.5** `update_plan_content(plan_id: str, content: str) -> None`
+- [x] **1.6.6** `add_plan_revision(plan_id: str, feedback: str, revised_content: str) -> None`
+  - [x] Appends to `revisions` with `feedback`, `revised_at`, `content`
 
 ### 1.7 Plan task tracking (department & employee)
 
-- [ ] **1.7.1** `set_dept_task(plan_id: str, dept: str, task: str) -> None`
-  - [ ] Creates/updates `department_tasks[dept]` with `task`, `status: "pending"`, `employee_tasks: {}`
-- [ ] **1.7.2** `set_employee_task(plan_id: str, dept: str, employee: str, task: str) -> None`
-  - [ ] Creates employee task with `task`, `status: "pending"`, `output: null`
-- [ ] **1.7.3** `update_dept_task_status(plan_id: str, dept: str, status: str) -> None`
-- [ ] **1.7.4** `update_employee_task_status(plan_id: str, dept: str, employee: str, status: str) -> None`
-- [ ] **1.7.5** `set_employee_task_output(plan_id: str, dept: str, employee: str, output: str) -> None`
-- [ ] **1.7.6** `set_dept_report(plan_id: str, dept: str, report: str) -> None`
-- [ ] **1.7.7** `set_ceo_report(plan_id: str, report: str) -> None`
+- [x] **1.7.1** `set_dept_task(plan_id: str, dept: str, task: str) -> None`
+  - [x] Creates/updates `department_tasks[dept]` with `task`, `status: "pending"`, `employee_tasks: {}`
+- [x] **1.7.2** `set_employee_task(plan_id: str, dept: str, employee: str, task: str) -> None`
+  - [x] Creates employee task with `task`, `status: "pending"`, `output: null`
+- [x] **1.7.3** `update_dept_task_status(plan_id: str, dept: str, status: str) -> None`
+- [x] **1.7.4** `update_employee_task_status(plan_id: str, dept: str, employee: str, status: str) -> None`
+- [x] **1.7.5** `set_employee_task_output(plan_id: str, dept: str, employee: str, output: str) -> None`
+- [x] **1.7.6** `set_dept_report(plan_id: str, dept: str, report: str) -> None`
+- [x] **1.7.7** `set_ceo_report(plan_id: str, report: str) -> None`
 
 ---
 
-## 2. CLI interface — setup commands (`main.py`)
+## 2. CLI interface - setup commands (`main.py`)
 
 ### 2.1 App and console
 
@@ -194,7 +194,7 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 ### 4.1 Draft and revision
 
 - [ ] **4.1.1** Implement `_build_dept_roster_summary()` (or equivalent) for CEO context
-- [ ] **4.1.2** Define `DRAFT_PLAN_PROMPT` template (company name, goal, dept roster) — output format per system-design (Executive Summary, Objectives, Department Breakdown, Timeline, Success Metrics)
+- [ ] **4.1.2** Define `DRAFT_PLAN_PROMPT` template (company name, goal, dept roster) - output format per system-design (Executive Summary, Objectives, Department Breakdown, Timeline, Success Metrics)
 - [ ] **4.1.3** `draft_plan(goal: str) -> dict`
   - [ ] Get CEO and company name from state
   - [ ] Build prompt; call `agent_runner.execute_ceo_task(prompt)`
@@ -235,7 +235,7 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 
 ### 5.1 Helpers and parsing
 
-- [ ] **5.1.1** `_build_dept_roster_summary()` — text summary of departments and members for CEO/dept head prompts
+- [ ] **5.1.1** `_build_dept_roster_summary()` - text summary of departments and members for CEO/dept head prompts
 - [ ] **5.1.2** `_parse_dept_assignments(raw_output: str) -> dict[str, str]`
   - [ ] Parse CEO output for sections prefixed with "DEPT: <name>"; return `{dept_name: task_description}`
   - [ ] Resilient to malformed output; log or fallback if parse fails
@@ -254,7 +254,7 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 
 - [ ] **5.3.1** Define dept head breakdown prompt (head_name, head_role, dept_name, company_name, dept_task, employee_roster); output format "EMPLOYEE: <name>"
 - [ ] **5.3.2** `breakdown_to_employees(plan_id: str, dept: str) -> dict[str, str]`
-  - [ ] Load dept task; get dept head; build employee roster; build prompt; execute dept head (via agent_runner with head as “employee”)
+  - [ ] Load dept task; get dept head; build employee roster; build prompt; execute dept head (via agent_runner with head as "employee")
   - [ ] Parse output; call `state.set_employee_task(plan_id, dept, employee, task)` for each
   - [ ] Return `{employee_name: task_description}`
 
@@ -282,13 +282,13 @@ Track implementation status against [system-design.md](system-design.md). Use `[
   - [ ] Validate plan status is "approved"; else clear error and suggest approve-plan
   - [ ] Set plan status to "executing"
   - [ ] Step 1: print "[CEO] Breaking down plan into department tasks..."; call `breakdown_to_departments(plan_id)`; show dept tasks
-  - [ ] Step 2: for each department — breakdown to employees, then execute_employee_tasks, then compile_dept_report (with progress messages per step)
+  - [ ] Step 2: for each department - breakdown to employees, then execute_employee_tasks, then compile_dept_report (with progress messages per step)
   - [ ] Step 3: print "[CEO] Compiling final report..."; call `compile_ceo_report(plan_id)`
   - [ ] Print: "Execution complete. View report with: company-os final-report <plan_id>"
 - [ ] **5.7.2** `company-os plan-status <plan-id>`
   - [ ] Load plan; render Rich table: Department | Task | Status | Employees (done/total); per-dept breakdown: Employee | Task | Status
 - [ ] **5.7.3** `company-os final-report <plan-id>`
-  - [ ] Load plan; render `ceo_report` in Rich markdown panel; header "Final Report — Plan <plan_id>"; show "Reported by: <CEO> → You (Owner)"
+  - [ ] Load plan; render `ceo_report` in Rich markdown panel; header "Final Report - Plan <plan_id>"; show "Reported by: <CEO> → You (Owner)"
 
 ---
 
@@ -348,7 +348,7 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 
 ### 7.5 Misc CLI
 
-- [ ] **7.5.1** `company-os version` — print version from package metadata (e.g. `importlib.metadata.version("company-os")`)
+- [ ] **7.5.1** `company-os version` - print version from package metadata (e.g. `importlib.metadata.version("company-os")`)
 
 ---
 
@@ -363,8 +363,8 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 
 | Section | Description | Done | Total |
 |--------|-------------|------|-------|
-| 0 | Project scaffolding | 0 | 6 |
-| 1 | State management | 0 | 32 |
+| 0 | Project scaffolding | 6 | 6 |
+| 1 | State management | 32 | 32 |
 | 2 | CLI setup commands | 0 | 15 |
 | 3 | Execution engine | 0 | 8 |
 | 4 | Plan manager | 0 | 12 |
@@ -373,4 +373,4 @@ Track implementation status against [system-design.md](system-design.md). Use `[
 | 7 | Polish & hardening | 0 | 12 |
 | 8 | Documentation | 0 | 2 |
 
-**Total:** 0 / 108 (update counts as you check off items)
+**Total:** 38 / 108 (42% complete)
